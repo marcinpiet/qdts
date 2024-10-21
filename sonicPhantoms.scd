@@ -1,5 +1,11 @@
 (
+/*
+Dependencies
+- RedUniverse
+- OversamplingOscillators
+*/
 
+//starts the synthesis server and loads all the necessary functions
 s.waitForBoot({
 
 	/*
@@ -369,62 +375,19 @@ Ndef(\sineCluster).play;
 //sequence parameters in time
 Tdef(\playSeq, {
 
-	var targetPitchSeq = Pseq([72, 80, 86, 92, 101], inf).asStream;
-	var carrierSeq = Pseq([2272, 2680, 2004], inf).asStream;
-	var time = Pseq([0.2, 0.8, 0.4, 0.1], inf).asStream;
+	var acc = 2.5;
+	var targetPitchSeq = Pseq([72, 80, 86, 192], inf).asStream;
+	var carrierSeq = Pseq([2272, 2680, 2004, 2457], inf).asStream;
+	var time = Pseq([0.2, 0.8, 0.4, 0.2], inf).asStream * acc.reciprocal;
 
 	loop{
 		Ndef(\sineCluster).set(\targetPitch, targetPitchSeq.next + 15.rand);
 		Ndef(\sineCluster).set(\carrierPitch, carrierSeq.next + 123.rand);
 		//time
-		time.next.wait;
+		(time.next).wait;
 	}
 }).play;
 )
-
-Ndef(\sineCluster).stop;
-
-//modulated carrier and target
-(
-
-Ndef(\sineCluster, {|carrierPitch = 1280, targetPitch = 30, cModF = 0.01, tModF = 0.01|
-
-	var rate, env, carrierMod, targetMod, size,freqCluster, sines;
-
-	rate = 1.34;
-	//modulators
-	carrierMod = carrierPitch + LFNoise2.ar(cModF).range(100, 200);
-	targetMod = targetPitch + LFNoise2.ar(tModF).range(-10, 20);
-
-	size = ~targetAmplitudes.size;
-
-	freqCluster = (size-1).collect{|i|
-
-		//i.postln;
-		carrierMod + ((i + 1) * targetMod);
-
-	};
-
-	freqCluster = freqCluster.addFirst(carrierPitch);
-
-	sines = size.collect{|i|
-
-		var sine = SinOscOS.ar(freqCluster[i], oversample: 4, mul: ~carrierComplexAmplitudes[i]);
-
-
-		sine * 0.2;
-	};
-
-
-	sines.sum!2;
-
-});
-);
-
-Ndef(\sineCluster).play;
-//reset parameters
-Ndef(\sineCluster).set(\cModF, 2);
-Ndef(\sineCluster).set(\tModF, 3.2);
 
 Ndef(\sineCluster).stop;
 
@@ -497,6 +460,7 @@ Ndef(\sineCluster).set(\modfreq, 11.94);
 Ndef(\sineCluster).set(\carrierPitch, 1213.2);
 Ndef(\sineCluster).set(\targetPitch, 39.2);
 
+//get server window
 s.makeWindow;
 
 
